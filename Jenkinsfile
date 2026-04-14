@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        PATH = "/usr/local/bin:/usr/bin:/bin"
         IMAGE_NAME = "cicd-demo"
         CONTAINER_NAME = "cicd-container"
     }
@@ -16,16 +17,16 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "/usr/local/bin/docker build -t ${IMAGE_NAME}:latest ."
+                sh "docker build -t ${IMAGE_NAME}:latest ."
             }
         }
 
         stage('Run Container') {
             steps {
                 sh """
-                /usr/local/bin/docker rm -f ${CONTAINER_NAME} || true
+                docker rm -f ${CONTAINER_NAME} || true
 
-                /usr/local/bin/docker run -d \\
+                docker run -d \\
                 --name ${CONTAINER_NAME} \\
                 -p 5002:5000 \\
                 ${IMAGE_NAME}:latest
@@ -42,10 +43,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD Pipeline executed successfully!'
+            echo 'CI/CD Pipeline executed successfully!'
         }
         failure {
-            echo '❌ Pipeline failed. Check logs!'
+            echo 'Pipeline failed. Check logs!'
         }
     }
 }
