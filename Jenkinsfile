@@ -1,42 +1,51 @@
 pipeline {
-  agent any
-  environment {
-    IMAGE_NAME = "cicd-staging-demo"
-    CONTAINER_NAME = "staging-container"
-  }
-  stages {
-    stage('Checkout Code') {
-      steps {
-        git branch: 'main', url: 'https://github.com/abhinayanand7/cicd-staging-demo.git'
-      }
+    agent any
+
+    environment {
+        IMAGE_NAME = "cicd-demo"
+        CONTAINER_NAME = "cicd-container"
     }
-    stage('Build Docker Image') {
-      steps {
-        script {
-          docker.build("${IMAGE_NAME}:latest")
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/abhinayanand7/cicd-staging-demo.git'
+            }
         }
-      }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "/usr/local/bin/docker build -t ${IMAGE_NAME}:latest ."
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh """
+                /usr/local/bin/docker rm -f ${CONTAINER_NAME} || true
+
+                /usr/local/bin/docker run -d \\
+                --name ${CONTAINER_NAME} \\
+                -p 5002:5000 \\
+                ${IMAGE_NAME}:latest
+                """
+            }
+        }
+
+        stage('Test App') {
+            steps {
+                sh "curl http://localhost:5002 || true"
+            }
+        }
     }
-    stage('Stop Existing Container') {
-      steps {
-        sh "docker stop ${CONTAINER_NAME} || true"
-        sh "docker rm ${CONTAINER_NAME} || true"
-      }
+
+    post {
+        success {
+            echo '✅ CI/CD Pipeline executed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed. Check logs!'
+        }
     }
-    stage('Deploy to Staging') {
-      steps {
-        sh """
-          docker run -d \
-          --name ${CONTAINER_NAME} \
-          -p 5000:5000 \
-          ${IMAGE_NAME}:latest
-        """
-      }
-    }
-    stage('Post-Deployment Verification') {
-      steps {
-        sh "curl http://localhost:5000 || true"
-      }
-    }
-  }
 }
