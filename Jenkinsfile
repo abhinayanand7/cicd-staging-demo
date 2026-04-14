@@ -6,10 +6,16 @@ pipeline {
   }
   stages {
     stage('Checkout Code') {
-      steps { git 'https://github.com/abhinayanand7/cicd-staging-demo.git' }
+      steps {
+        git branch: 'main', url: 'https://github.com/abhinayanand7/cicd-staging-demo.git'
+      }
     }
     stage('Build Docker Image') {
-      steps { script { docker.build("${IMAGE_NAME}:latest") } }
+      steps {
+        script {
+          docker.build("${IMAGE_NAME}:latest")
+        }
+      }
     }
     stage('Stop Existing Container') {
       steps {
@@ -28,7 +34,9 @@ pipeline {
       }
     }
     stage('Post-Deployment Verification') {
-      steps { sh "curl http://localhost:5000 || true" }
+      steps {
+        sh "curl http://localhost:5000 || true"
+      }
     }
   }
 }
